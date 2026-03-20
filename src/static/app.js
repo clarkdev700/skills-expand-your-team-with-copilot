@@ -552,6 +552,18 @@ document.addEventListener("DOMContentLoaded", () => {
             .join("")}
         </ul>
       </div>
+      <div class="share-buttons">
+        <span class="share-label">Share:</span>
+        <button class="share-button share-twitter" data-activity="${name}" data-description="${details.description}" title="Share on X (Twitter)">
+          𝕏
+        </button>
+        <button class="share-button share-facebook" data-activity="${name}" title="Share on Facebook">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+        </button>
+        <button class="share-button share-copy" data-activity="${name}" title="Copy link">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+      </div>
       <div class="activity-card-actions">
         ${
           currentUser
@@ -587,7 +599,56 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
+    // Add click handlers for share buttons
+    activityCard.querySelector(".share-twitter").addEventListener("click", () => {
+      shareToTwitter(name, details.description);
+    });
+    activityCard.querySelector(".share-facebook").addEventListener("click", () => {
+      shareToFacebook(name);
+    });
+    activityCard.querySelector(".share-copy").addEventListener("click", (event) => {
+      copyActivityLink(name, event.currentTarget);
+    });
+
     activitiesList.appendChild(activityCard);
+  }
+
+  function getActivityShareUrl(activityName) {
+    const url = new URL(window.location.href);
+    url.searchParams.set("activity", activityName);
+    return url.toString();
+  }
+
+  function shareToTwitter(activityName, description) {
+    const shareUrl = getActivityShareUrl(activityName);
+    const truncated = description.length > 80 ? description.slice(0, 77) + "..." : description;
+    const text = `Check out ${activityName} at Mergington High School! ${truncated}`;
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl)}`;
+    window.open(twitterUrl, "_blank", "noopener,noreferrer");
+  }
+
+  function shareToFacebook(activityName) {
+    const shareUrl = getActivityShareUrl(activityName);
+    const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+    window.open(facebookUrl, "_blank", "noopener,noreferrer");
+  }
+
+  function copyActivityLink(activityName, buttonElement) {
+    const shareUrl = getActivityShareUrl(activityName);
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      const originalTitle = buttonElement.title;
+      buttonElement.title = "Copied!";
+      buttonElement.classList.add("share-copy-success");
+      setTimeout(() => {
+        buttonElement.title = originalTitle;
+        buttonElement.classList.remove("share-copy-success");
+      }, 2000);
+    }).catch(() => {
+      buttonElement.title = "Could not copy link";
+      setTimeout(() => {
+        buttonElement.title = "Copy link";
+      }, 2000);
+    });
   }
 
   // Event listeners for search and filter
